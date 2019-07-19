@@ -10,7 +10,7 @@
  *
  * @brief Gunrock breadth-first search (BFS) application
  */
-
+#include <chrono>
 #include <gunrock/gunrock.h>
 
 // graph construction utilities
@@ -86,7 +86,7 @@ float RunTests_enable_idempotence(GRGraph* output, BFS_Parameter *parameter)
 }
 
 /**
- * @brief Run test
+/ * @brief Run test
  *
  * @tparam VertexId   Vertex identifier type
  * @tparam Value      Attribute type
@@ -209,6 +209,10 @@ float runBFS(GRGraph* output, BFS_Parameter *parameter)
 
     CpuTimer cpu_timer;
     float elapsed = 0.0f;
+
+ std::chrono::steady_clock::time_point startBFSProcTime = std::chrono::steady_clock::now();
+    std::cout << "Processing starts at: " << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count()) << std::endl;
     for (int i = 0; i < num_iters; ++i)
     {
         printf("Round %d of bfs.\n", i+1);
@@ -229,6 +233,9 @@ float runBFS(GRGraph* output, BFS_Parameter *parameter)
 
         elapsed += cpu_timer.ElapsedMillis();
     }
+std::chrono::steady_clock::time_point endBFSProcTime= std::chrono::steady_clock::now();
+    std::cout << "Processing ends at: " << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count())  << std::endl;
 
     // Copy out results
     util::GRError(
@@ -283,6 +290,7 @@ float dispatch_bfs(
     parameter->enable_idempotence = config -> enable_idempotence;
 
     float elapsed_time;
+
 
     switch (data_t.VTXID_TYPE)
     {
@@ -353,6 +361,7 @@ float dispatch_bfs(
                 }
 
                 elapsed_time = RunTests_mark_predecessors<int, int, int>(grapho, parameter);
+
 
                 // reset for free memory
                 csr.row_offsets    = NULL;

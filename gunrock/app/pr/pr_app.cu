@@ -10,9 +10,9 @@
  *
  * @brief Gunrock PageRank application
  */
-
+#include <chrono>
 #include <gunrock/gunrock.h>
-
+#include <iostream>
 // graph construction utilities
 #include <gunrock/graphio/market.cuh>
 
@@ -43,7 +43,7 @@ public:
     {
         delta    = 0.85f;
         error    = 0.01f;
-        max_iter =    50;
+        max_iter =    10;
         normalized = false;
     }
 
@@ -89,6 +89,7 @@ void normalizedPageRank(GRGraph *output, PR_Parameter *parameter)
         runPageRank<VertexId, SizeT, Value, false> (output, parameter);
 }
 
+
 /**
  * @brief Run test
  *
@@ -112,6 +113,7 @@ template <
     bool NORMALIZED >
 void runPageRank(GRGraph *output, PR_Parameter *parameter)
 {
+
     typedef PRProblem < VertexId,
             SizeT,
             Value,
@@ -183,6 +185,10 @@ void runPageRank(GRGraph *output, PR_Parameter *parameter)
     // Perform PageRank
     CpuTimer cpu_timer;
 
+ std::chrono::steady_clock::time_point startPRProcTime = std::chrono::steady_clock::now();
+    std::cout << "Processing starts at: " << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count()) << std::endl;
+
     util::GRError(
         problem->Reset(src, delta, error, max_iter,
                        enactor->GetFrontierType(), max_queue_sizing),
@@ -190,11 +196,18 @@ void runPageRank(GRGraph *output, PR_Parameter *parameter)
     util::GRError(
         enactor->Reset(), "PR Enactor Reset Reset failed", __FILE__, __LINE__);
 
+
     cpu_timer.Start();
     util::GRError(
         enactor->Enact(traversal_mode),
         "PR Problem Enact Failed", __FILE__, __LINE__);
+
+std::chrono::steady_clock::time_point endPRProcTime= std::chrono::steady_clock::now();
+    std::cout << "Processing ends at: " << std::to_string(std::chrono::duration_cast<std::chrono::milliseconds>
+        (std::chrono::system_clock::now().time_since_epoch()).count()) << std::endl;
+ 
     cpu_timer.Stop();
+
 
     float elapsed = cpu_timer.ElapsedMillis();
 
@@ -239,6 +252,7 @@ void dispatchPageRank(
     ContextPtr*    context,
     cudaStream_t*  streams)
 {
+
     PR_Parameter *parameter = new PR_Parameter;
     parameter->src = (long long*)malloc(sizeof(long long));
     parameter->src[0] = -1;
@@ -349,7 +363,6 @@ void gunrock_pagerank(
         }
     }
     if (!config -> quiet) { printf("\n"); }
-
     dispatchPageRank(grapho, graphi, config, data_t, context, streams);
 }
 
@@ -403,3 +416,4 @@ void pagerank(
 // mode:c++
 // c-file-style: "NVIDIA"
 // End:
+
